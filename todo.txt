@@ -1,0 +1,14 @@
+###TO DO
+
+### MVP
+1. Register user
+2. Log in
+3. Log out
+4. Create add
+5. Edit add
+6. Delete your add
+7. Answer add
+8. Acept player
+
+###
+1. 
