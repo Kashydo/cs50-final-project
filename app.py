@@ -126,5 +126,10 @@ def login():
             return render_template("login.html", error="Błąd logowania")
         return redirect("/")
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect("/")
+
 if __name__ == '__main__':
     app.run()
