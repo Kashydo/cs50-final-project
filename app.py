@@ -76,6 +76,10 @@ def register():
         hash= generate_password_hash(password).decode('utf-8')
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute("SELECT * FROM users WHERE name = %s OR email=%s", (username, email)) 
+                if cur.fetchone():
+                    flash("Użytkownik już istnieje", "error")
+                    return render_template("register.html", error="Użytkownik już istnieje")
                 cur.execute(
                     "INSERT INTO users (name, email, hash) VALUES (%s, %s, %s)",
                     (username, email, hash),
@@ -83,7 +87,43 @@ def register():
                 conn.commit()
                 flash("Dodano użytkownika", "success")
         except Exception as e:
+            flash("Błąd dodawania użytkownika", "error")
             return render_template("register.html", error="Błąd dodawania użytkownika")
+        return redirect("/")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    session.clear()
+    if request.method == 'GET':
+        return render_template("login.html")
+    if request.method == 'POST':
+        user = request.form.get("user")
+        if not user:
+            flash("Brak nazwy użytkownika lub maila", "error")
+            return render_template("login.html", error="Brak nazwy użytkownika lub maila")
+        if "@" in user:
+            column = "email"
+        else:
+            column = "name"
+        password = request.form.get("password")
+        if not password:
+            flash("Brak hasła", "error")
+            return render_template("login.html", error="Brak hasła")
+        try:
+            with conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute(f"SELECT * FROM users WHERE {column} = %s", (user,))
+                user = cur.fetchone()
+                if not user:
+                    flash("Niepoprawne dane", "error")
+                    return render_template("login.html", error="Niepoprawne dane")
+                if not check_password_hash(user["hash"], password):
+                    flash("Niepoprawne dane", "error")
+                    return render_template("login.html", error="Niepoprawne dane")
+                session["user"] = user
+                flash("Zalogowano", "success")
+        except Exception as e:
+            flash("Błąd logowania", "error")
+            return render_template("login.html", error="Błąd logowania")
         return redirect("/")
 
 if __name__ == '__main__':
