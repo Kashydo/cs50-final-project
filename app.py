@@ -1,6 +1,5 @@
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
-from flask_bootstrap import Bootstrap
 from config import ProdConfig, DevConfig
 from psycopg2 import connect
 from psycopg2.extras import DictCursor
@@ -12,7 +11,6 @@ env = environ.get('FLASK_ENV', 'development')
 
 # Tworzenie aplikacji Flask
 app = Flask(__name__)
-Bootstrap(app)
 
 if env == 'production':
     app.config.from_object(ProdConfig)
