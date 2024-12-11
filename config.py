@@ -14,6 +14,8 @@ class Config:
     SESSION_COOKIE_NAME = environ.get('SESSION_COOKIE_NAME')
     STATIC_FOLDER = 'static'
     TEMPLATES_FOLDER = 'templates'
+    SESSION_PERMANENT = False
+    SESSION_TYPE = "filesystem"
 
 
 class ProdConfig(Config):
