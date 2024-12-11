@@ -53,9 +53,13 @@ def register():
     if request.method == 'GET':
         return render_template("register.html")
     if request.method == 'POST':
+        print("POST")
         username = request.form.get("username")
         if not username:
             return render_template("register.html", error="Brak nazwy użytkownika")
+        email = request.form.get("email")
+        if not email:
+            return render_template("register.html", error="Brak adresu email")
         password = request.form.get("password")
         if not password:
             return render_template("register.html", error="Brak hasła")
@@ -66,14 +70,15 @@ def register():
             return render_template("register.html", error="Hasła nie są zgodne")
         hash= generate_password_hash(password).decode('utf-8')
         try:
+            print("Tworzenie kursora")
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 cur.execute(
-                    "INSERT INTO users (username, hash) VALUES (%s, %s)",
-                    (username, hash),
+                    "INSERT INTO users (name, email, hash) VALUES (%s, %s, %s)",
+                    (username, email, hash),
                 )
                 conn.commit()
+                print("Dodano użytkownika!")
         except Exception as e:
-            print(f"Błąd dodawania użytkownika: {e}")
             return render_template("register.html", error="Błąd dodawania użytkownika")
         return redirect("/")
 
