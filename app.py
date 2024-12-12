@@ -5,6 +5,7 @@ from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from os import environ
 from flask_bcrypt import generate_password_hash, check_password_hash
+from helpers import login_required
 
 # Wybór konfiguracji
 env = environ.get('FLASK_ENV', 'development')
@@ -81,7 +82,7 @@ def register():
                     flash("Użytkownik już istnieje", "error")
                     return render_template("register.html", error="Użytkownik już istnieje")
                 cur.execute(
-                    "INSERT INTO users (name, email, hash) VALUES (%s, %s, %s)",
+                    "INSERT INTO users (name, email, hash, filled_preferences) VALUES (%s, %s, %s, False)",
                     (username, email, hash),
                 )
                 conn.commit()
@@ -89,7 +90,7 @@ def register():
         except Exception as e:
             flash("Błąd dodawania użytkownika", "error")
             return render_template("register.html", error="Błąd dodawania użytkownika")
-        return redirect("/")
+        return redirect("/login")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -119,17 +120,64 @@ def login():
                 if not check_password_hash(user["hash"], password):
                     flash("Niepoprawne dane", "error")
                     return render_template("login.html", error="Niepoprawne dane")
-                session["user"] = user
+                session["user"] = user['id']
                 flash("Zalogowano", "success")
         except Exception as e:
             flash("Błąd logowania", "error")
             return render_template("login.html", error="Błąd logowania")
-        return redirect("/")
+        if user["filled_preferences"]:
+            return redirect("/")
+        return render_template("preferences.html")
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect("/")
+
+@app.route('/preferences', methods=['GET', 'POST'])
+@login_required
+def preferences():
+    if request.method == 'GET':
+        return render_template("preferences.html")
+    if request.method == 'POST':
+        user = session.get("user")
+        print(user)
+        if not user:
+            flash("Brak użytkownika", "error")
+            return redirect("/")
+        preferences = request.form.getlist("roles")
+        print(preferences)
+        if not preferences:
+            flash("Brak preferencji", "error")
+            return render_template("preferences.html", error="Brak preferencji")
+        try:
+            with conn.cursor(cursor_factory=DictCursor) as cur:
+                if 'player' in preferences:
+                    print("player")
+                    cur.execute(
+                        "INSERT INTO players (user_id) VALUES (%s)",
+                        (user,),
+                    )
+                    filled_preferences = True
+                if 'gm' in preferences:
+                    print("gm")
+                    cur.execute(
+                        "INSERT INTO gms (user_id) VALUES (%s)",
+                        (user,),
+                    )
+                    filled_preferences = True
+                cur.execute(
+                    "UPDATE users SET filled_preferences = %s WHERE id = %s",
+                    (filled_preferences, user),
+                )
+                print("filled_preferences")
+                conn.commit()
+                flash("Wypełniono ankiete", "success")
+        except Exception as e:
+            flash("Błąd uzupełniania preferencji", "error")
+            return redirect("/", error="Błąd preferencji")
+        return redirect("/")
+
 
 if __name__ == '__main__':
     app.run()
