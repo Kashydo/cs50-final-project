@@ -4,7 +4,7 @@ from config import ProdConfig, DevConfig
 from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from os import environ
-from flask_bcrypt import generate_password_hash, check_password_hash
+from flask_bcrypt import generate_password_hash, check_password_hash 
 from helpers import login_required
 import model
 
@@ -52,6 +52,19 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Handle user registration.
+
+    Returns:
+        - On GET: Renders the registration form.
+        - On POST: 
+            - If any form field is missing or invalid, re-renders the registration form with an error message.
+            - If the username already exists, re-renders the registration form with an error message.
+            - If registration is successful, redirects to the login page.
+
+    Raises:
+        Exception: If there is an error adding the user to the database.
+    """
     if request.method == 'GET':
         return render_template("register.html")
     if request.method == 'POST':
@@ -94,6 +107,24 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Handle user login.
+
+    This function clears the current session and processes login requests.
+
+    GET:
+        Renders the login page.
+
+    POST:
+        - Retrieves the username/email and password from the form.
+        - Validates the presence of username/email and password.
+        - Determines whether the user input is an email or username.
+        - Checks the user's credentials against the database.
+        - If credentials are invalid, flashes an error message and re-renders the login page.
+        - If credentials are valid, sets the user ID in the session and flashes a success message.
+        - Redirects to the home page if user preferences are filled, otherwise renders the preferences page.
+
+    """
     session.clear()
     if request.method == 'GET':
         return render_template("login.html")
@@ -127,12 +158,28 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """
+    Logs out the current user by clearing the session and redirecting to the home page.
+    Returns:
+        Response: A redirect response to the home page ("/").
+    """
+
     session.clear()
     return redirect("/")
 
 @app.route('/preferences', methods=['GET', 'POST'])
 @login_required
 def preferences():
+    """
+    Handle user preferences for roles.
+    Returns:
+        - On GET: Renders the preferences.html template.
+        - On POST: Redirects to the home page with a success or error message.
+    Raises:
+        - Redirects to the home page with an error message if the user is not found in the session.
+        - Renders the preferences.html template with an error message if no preferences are selected.
+        - Redirects to the home page with an error message if there is an exception during database operations.
+    """
     if request.method == 'GET':
         return render_template("preferences.html")
     if request.method == 'POST':
@@ -168,6 +215,15 @@ def preferences():
 @app.route('/profile')
 @login_required
 def profile():
+    """
+    Route for displaying the user's profile.
+    This route is protected by the @login_required decorator, ensuring that only logged-in users can access it.
+    Returns:
+        A rendered template of the user's profile if the user is found in the session and the database.
+        Redirects to the home page with an error message if the user is not found or if there is an error fetching the user data.
+    Raises:
+        Exception: If there is an error while fetching the user data from the database.
+    """
     user = session.get("user")
     if not user:
         flash("Brak użytkownika", "error")
