@@ -178,6 +178,38 @@ def preferences():
             return redirect("/", error="Błąd preferencji")
         return redirect("/")
 
+@app.route('/profile')
+@login_required
+def profile():
+    user = session.get("user")
+    if not user:
+        flash("Brak użytkownika", "error")
+        return redirect("/")
+    try:
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute("SELECT id, name, email FROM users WHERE id = %s", (user,))
+            user_profile = dict(cur.fetchone())
+            print(user_profile["name"])
+            if not user_profile:
+                flash("Brak użytkownika", "error")
+                return redirect("/")
+            cur.execute("SELECT * FROM players WHERE user_id = %s", (user,))
+            if cur.fetchone():
+               user_profile["player"] = True
+            else:
+                user_profile["player"] = False    
+            cur.execute("SELECT * FROM gms WHERE user_id = %s", (user,))
+            if cur.fetchone():
+                user_profile["gm"] = True
+            else:
+                user_profile["gm"] = False
+            return render_template("profile.html", user= user_profile)
+    except Exception as e:
+        flash("Błąd pobierania użytkownika", "error")
+        return redirect("/", error="Błąd pobierania użytkownika")
+    return render_template("profile.html")
+    
+
 
 if __name__ == '__main__':
     app.run()

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block content %}
+    <h1>Profil</h1>
+    <p>Witaj, {{user.name}}!</p>
+    <h2>Twoje preferencje</h2>
+    {% if user.player %}
+        <p>Gracz</p>
+    {% endif %}
+    {% if user.gm %}
+        <p>Mistrz Gry</p>
+    {% endif %}
+{% endblock %}
