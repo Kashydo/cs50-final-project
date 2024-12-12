@@ -6,6 +6,7 @@ from psycopg2.extras import DictCursor
 from os import environ
 from flask_bcrypt import generate_password_hash, check_password_hash
 from helpers import login_required
+import model
 
 # Wybór konfiguracji
 env = environ.get('FLASK_ENV', 'development')
@@ -77,17 +78,16 @@ def register():
         hash= generate_password_hash(password).decode('utf-8')
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
-                cur.execute("SELECT * FROM users WHERE name = %s OR email=%s", (username, email)) 
-                if cur.fetchone():
+                if model.check_user_exist(cur, username):
                     flash("Użytkownik już istnieje", "error")
                     return render_template("register.html", error="Użytkownik już istnieje")
-                cur.execute(
-                    "INSERT INTO users (name, email, hash, filled_preferences) VALUES (%s, %s, %s, False)",
-                    (username, email, hash),
-                )
-                conn.commit()
-                flash("Dodano użytkownika", "success")
+                model.add_user(cur, username, email, hash)
+                print("User added to db")
+            conn.commit()
+            print("User saved")
+            flash("Dodano użytkownika", "success")
         except Exception as e:
+            print(f"Exception occurred: {e}")
             flash("Błąd dodawania użytkownika", "error")
             return render_template("register.html", error="Błąd dodawania użytkownika")
         return redirect("/login")
@@ -112,12 +112,8 @@ def login():
             return render_template("login.html", error="Brak hasła")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
-                cur.execute(f"SELECT * FROM users WHERE {column} = %s", (user,))
-                user = cur.fetchone()
+                user = model.check_user_password(cur, column, user, password)
                 if not user:
-                    flash("Niepoprawne dane", "error")
-                    return render_template("login.html", error="Niepoprawne dane")
-                if not check_password_hash(user["hash"], password):
                     flash("Niepoprawne dane", "error")
                     return render_template("login.html", error="Niepoprawne dane")
                 session["user"] = user['id']
@@ -154,22 +150,13 @@ def preferences():
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 if 'player' in preferences:
                     print("player")
-                    cur.execute(
-                        "INSERT INTO players (user_id) VALUES (%s)",
-                        (user,),
-                    )
+                    model.add_player(cur, user)
                     filled_preferences = True
                 if 'gm' in preferences:
                     print("gm")
-                    cur.execute(
-                        "INSERT INTO gms (user_id) VALUES (%s)",
-                        (user,),
-                    )
+                    model.add_gm(cur, user)
                     filled_preferences = True
-                cur.execute(
-                    "UPDATE users SET filled_preferences = %s WHERE id = %s",
-                    (filled_preferences, user),
-                )
+                model.update_prefences_questionary(cur, user)
                 print("filled_preferences")
                 conn.commit()
                 flash("Wypełniono ankiete", "success")
@@ -187,19 +174,16 @@ def profile():
         return redirect("/")
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            cur.execute("SELECT id, name, email FROM users WHERE id = %s", (user,))
-            user_profile = dict(cur.fetchone())
-            print(user_profile["name"])
+            user_profile = model.get_user_profile(cur, user)
             if not user_profile:
                 flash("Brak użytkownika", "error")
                 return redirect("/")
-            cur.execute("SELECT * FROM players WHERE user_id = %s", (user,))
-            if cur.fetchone():
+            user_profile = dict(user_profile)
+            if model.get_user_player_status(cur, user):
                user_profile["player"] = True
             else:
                 user_profile["player"] = False    
-            cur.execute("SELECT * FROM gms WHERE user_id = %s", (user,))
-            if cur.fetchone():
+            if model.get_user_gm_status(cur, user):
                 user_profile["gm"] = True
             else:
                 user_profile["gm"] = False
