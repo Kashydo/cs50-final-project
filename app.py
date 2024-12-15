@@ -48,7 +48,9 @@ def after_request(response):
 # Testowa trasa
 @app.route('/')
 def index():
-    return render_template("index.html")
+    with conn.cursor(cursor_factory=DictCursor) as cur:
+        games = model.get_games(cur)
+    return render_template("index.html", games=games)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
