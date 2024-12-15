@@ -227,23 +227,37 @@ def profile():
         return redirect("/", error="Błąd pobierania użytkownika")
     return render_template("profile.html")
     
-    @app.route('/post_game', methods=['GET', 'POST'])
-    @login_required
-    def post_game():
-        if request.method == 'GET':
-            check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
-            return render_template("post_game.html")
-        if request.method == 'POST':
-            check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
-            title = request.form.get("title")
-            check_and_flash_if_none(title, "post_game.html", "Brak tytułu")
-            system = request.form.get("system")
-            check_and_flash_if_none(system, "post_game.html", "Brak systemu")
-            players = request.form.get("player_number")
-            check_and_flash_if_none(players, "post_game.html", "Brak liczby graczy")
-            description = request.form.get("description")
-            
-            
+@app.route('/post_game', methods=['GET', 'POST'])
+@login_required
+def post_game():
+    if request.method == 'GET':
+        print("GET")
+        check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+        return render_template("post_game.html")
+    if request.method == 'POST':
+        print("POST")
+        check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+        title = request.form.get("title")
+        print(title)
+        check_and_flash_if_none(title, "post_game.html", "Brak tytułu")
+        system = request.form.get("system")
+        print(system)
+        check_and_flash_if_none(system, "post_game.html", "Brak systemu")
+        players = request.form.get("players")
+        print(players)  
+        check_and_flash_if_none(players, "post_game.html", "Brak liczby graczy")
+        description = request.form.get("description")
+        print(description)
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                print("try to add game")
+                model.add_game(cur, session.get("user"), title, players, system, description)
+                conn.commit()
+                flash("Dodano grę", "success")
+            except Exception as e:
+                flash("Błąd dodawania gry", "error")
+                return redirect("/", error="Błąd dodawania gry")
+        return redirect("/")
 
 
 if __name__ == '__main__':
