@@ -143,3 +143,8 @@ def get_user_gm_status(cur, user):
     if cur.fetchone():
         return True
     return False
+
+def add_game(cur, user, title, max_players, game_system, description):
+    cur.execute("INSERT INTO games_posts (title, system_id, players, description, gm) "
+                "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
+                    
