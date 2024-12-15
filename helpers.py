@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import g, request, redirect, url_for, session, render_template, flash
+from flask import request, redirect, url_for, session, flash
 
 
 def login_required(f):
@@ -22,8 +22,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def check_and_flash_if_none(check, return_path, message):
+def check_and_flash_if_none(check, message):
     if check is None:
         flash(message, "error")
-        return render_template(return_path, error=message)
+        return True
+    return False
     

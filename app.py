@@ -4,7 +4,7 @@ from config import ProdConfig, DevConfig
 from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from os import environ
-from flask_bcrypt import generate_password_hash, check_password_hash 
+from flask_bcrypt import generate_password_hash 
 from helpers import login_required, check_and_flash_if_none
 import model
 
@@ -70,13 +70,17 @@ def register():
     if request.method == 'POST':
         print("POST")
         username = request.form.get("username")
-        check_and_flash_if_none(username, "register.html", "Brak nazwy użytkownika")
+        if check_and_flash_if_none(username, "Brak nazwy użytkownika"):
+            return render_template("register.html", error="Brak nazwy użytkownika")
         email = request.form.get("email")
-        check_and_flash_if_none(email, "register.html", "Brak adresu email")
+        if check_and_flash_if_none(email, "Brak maila"):
+            return render_template("register.html", error="Brak maila")
         password = request.form.get("password")
-        check_and_flash_if_none(password, "register.html", "Brak hasła")
+        if check_and_flash_if_none(password, "Brak hasła"):
+            return render_template("register.html", error="Brak hasła")
         confirmation = request.form.get("confirmation")
-        check_and_flash_if_none(confirmation, "register.html", "Brak potwierdzenia hasła")
+        if check_and_flash_if_none(confirmation, "Brak potwierdzenia hasła"):
+            return render_template("register.html", error="Brak potwierdzenia hasła")
         if password != confirmation:
             flash("Hasła nie są zgodne", "error")
             return render_template("register.html", error="Hasła nie są zgodne")
@@ -122,17 +126,19 @@ def login():
         return render_template("login.html")
     if request.method == 'POST':
         user = request.form.get("user")
-        check_and_flash_if_none(user, "login.html", "Brak nazwy użytkownika lub maila")
+        if check_and_flash_if_none(user, "Brak nazwy użytkownika lub maila"):
+            return render_template("login.html", error="Brak nazwy użytkownika lub maila")
         if "@" in user:
             column = "email"
         else:
             column = "name"
         password = request.form.get("password")
-        check_and_flash_if_none(password, "login.html", "Brak hasła")
+        if check_and_flash_if_none(password, "Brak hasła"):
+            return render_template("login.html", error="Brak hasła")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 user = model.check_user_password(cur, column, user, password)
-                check_and_flash_if_none(user, "login.html", "Niepoprawne dane")
+                check_and_flash_if_none(user, "Niepoprawne dane")
                 session["user"] = user['id']
                 flash("Zalogowano", "success")
         except Exception as e:
@@ -171,10 +177,12 @@ def preferences():
     if request.method == 'POST':
         user = session.get("user")
         print(user)
-        check_and_flash_if_none(user, "/", "Brak użytkownika")
+        if check_and_flash_if_none(user, "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
         preferences = request.form.getlist("roles")
         print(preferences)
-        check_and_flash_if_none(preferences, "preferences.html", "Brak preferencji")
+        if check_and_flash_if_none(preferences, "Brak preferencji"):
+            return render_template("preferences.html", error="Brak preferencji")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 if 'player' in preferences:
@@ -207,11 +215,12 @@ def profile():
         Exception: If there is an error while fetching the user data from the database.
     """
     user = session.get("user")
-    check_and_flash_if_none(user, "/", "Brak użytkownika")
+    if check_and_flash_if_none(user, "Brak użytkownika"):
+        return redirect("/", error="Brak użytkownika")
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
             user_profile = model.get_user_profile(cur, user)
-            check_and_flash_if_none(user_profile, "/", "Brak użytkownika")
+            check_and_flash_if_none(user_profile, "Brak użytkownika")
             user_profile = dict(user_profile)
             if model.get_user_player_status(cur, user):
                user_profile["player"] = True
@@ -232,22 +241,24 @@ def profile():
 def post_game():
     if request.method == 'GET':
         print("GET")
-        check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+        if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
         return render_template("post_game.html")
     if request.method == 'POST':
         print("POST")
-        check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+        if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
         title = request.form.get("title")
-        print(title)
-        check_and_flash_if_none(title, "post_game.html", "Brak tytułu")
+        if check_and_flash_if_none(title, "Brak tytułu"):
+            return render_template("post_game.html", error="Brak tytułu")
         system = request.form.get("system")
-        print(system)
-        check_and_flash_if_none(system, "post_game.html", "Brak systemu")
+        if check_and_flash_if_none(system, "Brak systemu"):
+            return render_template("post_game.html", error="Brak systemu")
         players = request.form.get("players")
-        print(players)  
-        check_and_flash_if_none(players, "post_game.html", "Brak liczby graczy")
+        if check_and_flash_if_none(players, "Brak liczby graczy"):
+            return render_template("post_game.html", error="Brak liczby graczy")
         description = request.form.get("description")
-        print(description)
+
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 print("try to add game")
