@@ -148,3 +148,6 @@ def add_game(cur, user, title, max_players, game_system, description):
     cur.execute("INSERT INTO games_posts (title, system_id, players, description, gm) "
                 "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
                     
+def get_games(cur):
+    cur.execute("SELECT * FROM games_posts JOIN users ON gm = users.id")
+    return cur.fetchall()
