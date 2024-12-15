@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}
+    Post Game
+{% endblock %}
+{% block content %}
+<form>
+    <div class="form-group">
+        <label for="game_name">Game Name</label>
+        <input type="text" class="form-control" id="game_name" name="game_name" placeholder="Enter game name" required>
+    </div>
+    <div class="form-group">
+        <label for="game_system">Game System</label>
+        <select class="form-select" aria-label="Default select example" required>
+            <option selected>Open this select menu</option>
+            <option value="1">D&D</option>
+            <option value="2">Fabula Ultima</option>
+            <option value="3">Zew Cthulhu</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="player_number">Number of players</label>
+        <input type="number" class="form-control" id="player_number" name="player_number" placeholder="Enter number of players" required>
+    </div>
+    <div class="form-group">
+        <label for="game_description">Game Description</label>
+        <textarea class="form-control" id="game_description" name="game_description" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

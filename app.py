@@ -5,7 +5,7 @@ from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from os import environ
 from flask_bcrypt import generate_password_hash, check_password_hash 
-from helpers import login_required
+from helpers import login_required, check_and_flash_if_none
 import model
 
 # Wybór konfiguracji
@@ -70,21 +70,13 @@ def register():
     if request.method == 'POST':
         print("POST")
         username = request.form.get("username")
-        if not username:
-            flash("Brak nazwy użytkownika", "error")
-            return render_template("register.html", error="Brak nazwy użytkownika")
+        check_and_flash_if_none(username, "register.html", "Brak nazwy użytkownika")
         email = request.form.get("email")
-        if not email:
-            flash("Brak adresu email", "error")
-            return render_template("register.html", error="Brak adresu email")
+        check_and_flash_if_none(email, "register.html", "Brak adresu email")
         password = request.form.get("password")
-        if not password:
-            flash("Brak hasła", "error")
-            return render_template("register.html", error="Brak hasła")
+        check_and_flash_if_none(password, "register.html", "Brak hasła")
         confirmation = request.form.get("confirmation")
-        if not confirmation:
-            flash("Brak potwierdzenia hasła", "error")
-            return render_template("register.html", error="Brak potwierdzenia hasła")
+        check_and_flash_if_none(confirmation, "register.html", "Brak potwierdzenia hasła")
         if password != confirmation:
             flash("Hasła nie są zgodne", "error")
             return render_template("register.html", error="Hasła nie są zgodne")
@@ -130,23 +122,17 @@ def login():
         return render_template("login.html")
     if request.method == 'POST':
         user = request.form.get("user")
-        if not user:
-            flash("Brak nazwy użytkownika lub maila", "error")
-            return render_template("login.html", error="Brak nazwy użytkownika lub maila")
+        check_and_flash_if_none(user, "login.html", "Brak nazwy użytkownika lub maila")
         if "@" in user:
             column = "email"
         else:
             column = "name"
         password = request.form.get("password")
-        if not password:
-            flash("Brak hasła", "error")
-            return render_template("login.html", error="Brak hasła")
+        check_and_flash_if_none(password, "login.html", "Brak hasła")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 user = model.check_user_password(cur, column, user, password)
-                if not user:
-                    flash("Niepoprawne dane", "error")
-                    return render_template("login.html", error="Niepoprawne dane")
+                check_and_flash_if_none(user, "login.html", "Niepoprawne dane")
                 session["user"] = user['id']
                 flash("Zalogowano", "success")
         except Exception as e:
@@ -185,14 +171,10 @@ def preferences():
     if request.method == 'POST':
         user = session.get("user")
         print(user)
-        if not user:
-            flash("Brak użytkownika", "error")
-            return redirect("/")
+        check_and_flash_if_none(user, "/", "Brak użytkownika")
         preferences = request.form.getlist("roles")
         print(preferences)
-        if not preferences:
-            flash("Brak preferencji", "error")
-            return render_template("preferences.html", error="Brak preferencji")
+        check_and_flash_if_none(preferences, "preferences.html", "Brak preferencji")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 if 'player' in preferences:
@@ -225,15 +207,11 @@ def profile():
         Exception: If there is an error while fetching the user data from the database.
     """
     user = session.get("user")
-    if not user:
-        flash("Brak użytkownika", "error")
-        return redirect("/")
+    check_and_flash_if_none(user, "/", "Brak użytkownika")
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
             user_profile = model.get_user_profile(cur, user)
-            if not user_profile:
-                flash("Brak użytkownika", "error")
-                return redirect("/")
+            check_and_flash_if_none(user_profile, "/", "Brak użytkownika")
             user_profile = dict(user_profile)
             if model.get_user_player_status(cur, user):
                user_profile["player"] = True
@@ -249,6 +227,23 @@ def profile():
         return redirect("/", error="Błąd pobierania użytkownika")
     return render_template("profile.html")
     
+    @app.route('/post_game', methods=['GET', 'POST'])
+    @login_required
+    def post_game():
+        if request.method == 'GET':
+            check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+            return render_template("post_game.html")
+        if request.method == 'POST':
+            check_and_flash_if_none(session.get("user"), "/", "Brak użytkownika")
+            title = request.form.get("title")
+            check_and_flash_if_none(title, "post_game.html", "Brak tytułu")
+            system = request.form.get("system")
+            check_and_flash_if_none(system, "post_game.html", "Brak systemu")
+            players = request.form.get("player_number")
+            check_and_flash_if_none(players, "post_game.html", "Brak liczby graczy")
+            description = request.form.get("description")
+            
+            
 
 
 if __name__ == '__main__':
