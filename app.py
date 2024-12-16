@@ -6,7 +6,7 @@ from psycopg2.extras import DictCursor
 from os import environ
 from flask_bcrypt import generate_password_hash 
 from helpers import login_required, check_and_flash_if_none
-import model
+import db.queries as queries
 
 # Wybór konfiguracji
 env = environ.get('FLASK_ENV', 'development')
@@ -49,7 +49,7 @@ def after_request(response):
 @app.route('/')
 def index():
     with conn.cursor(cursor_factory=DictCursor) as cur:
-        games = model.get_games(cur)
+        games = queries.get_games(cur)
     return render_template("index.html", games=games)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -89,10 +89,10 @@ def register():
         hash= generate_password_hash(password).decode('utf-8')
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
-                if model.check_user_exist(cur, username):
+                if queries.check_user_exist(cur, username):
                     flash("Użytkownik już istnieje", "error")
                     return render_template("register.html", error="Użytkownik już istnieje")
-                model.add_user(cur, username, email, hash)
+                queries.add_user(cur, username, email, hash)
                 print("User added to db")
             conn.commit()
             print("User saved")
@@ -139,7 +139,7 @@ def login():
             return render_template("login.html", error="Brak hasła")
         try:
             with conn.cursor(cursor_factory=DictCursor) as cur:
-                user = model.check_user_password(cur, column, user, password)
+                user = queries.check_user_password(cur, column, user, password)
                 check_and_flash_if_none(user, "Niepoprawne dane")
                 session["user"] = user['id']
                 flash("Zalogowano", "success")
@@ -189,13 +189,13 @@ def preferences():
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 if 'player' in preferences:
                     print("player")
-                    model.add_player(cur, user)
+                    queries.add_player(cur, user)
                     filled_preferences = True
                 if 'gm' in preferences:
                     print("gm")
-                    model.add_gm(cur, user)
+                    queries.add_gm(cur, user)
                     filled_preferences = True
-                model.update_prefences_questionary(cur, user)
+                queries.update_prefences_questionary(cur, user)
                 print("filled_preferences")
                 conn.commit()
                 flash("Wypełniono ankiete", "success")
@@ -221,14 +221,14 @@ def profile():
         return redirect("/", error="Brak użytkownika")
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            user_profile = model.get_user_profile(cur, user)
+            user_profile = queries.get_user_profile(cur, user)
             check_and_flash_if_none(user_profile, "Brak użytkownika")
             user_profile = dict(user_profile)
-            if model.get_user_player_status(cur, user):
+            if queries.get_user_player_status(cur, user):
                user_profile["player"] = True
             else:
                 user_profile["player"] = False    
-            if model.get_user_gm_status(cur, user):
+            if queries.get_user_gm_status(cur, user):
                 user_profile["gm"] = True
             else:
                 user_profile["gm"] = False
@@ -264,7 +264,7 @@ def post_game():
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 print("try to add game")
-                model.add_game(cur, session.get("user"), title, players, system, description)
+                queries.add_game(cur, session.get("user"), title, players, system, description)
                 conn.commit()
                 flash("Dodano grę", "success")
             except Exception as e:
