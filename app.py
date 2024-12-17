@@ -192,7 +192,7 @@ def preferences():
     if request.method == 'GET':
         return render_template("preferences.html")
     if request.method == 'POST':
-        user = session.get("user")
+        user = session.get("user")["id"]
         print(user)
         if check_and_flash_if_none(user, "Brak użytkownika"):
             return redirect("/", error="Brak użytkownika")
@@ -207,6 +207,7 @@ def preferences():
                     queries.add_player(cur, user)
                 if 'gm' in preferences:
                     print("gm")
+                    queries.add_gm(cur, user)
                 queries.update_preferences_questionary(cur, user)
                 print("filled_preferences")
                 conn.commit()
