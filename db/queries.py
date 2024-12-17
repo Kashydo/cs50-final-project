@@ -135,11 +135,12 @@ def get_user_gm_status(cur, user):
     """
     Check if a user has GM (Game Master) status.
     Args:
-        cur (cursor): A database cursor object to execute SQL queries.
+        cur (cursor): A database cursor object used to execute SQL queries.
         user (int): The user ID to check for GM status.
     Returns:
         bool: True if the user has GM status, False otherwise.
     """
+    
 
     cur.execute("SELECT * FROM gms WHERE user_id = %s", (user,))
     if cur.fetchone():
@@ -147,17 +148,54 @@ def get_user_gm_status(cur, user):
     return False
 
 def add_game(cur, user, title, max_players, game_system, description):
+    """
+    Adds a new game post to the database.
+    Parameters:
+    cur (cursor): The database cursor to execute the query.
+    gm (int): The id of the game master (GM) creating the post.
+    title (str): The title of the game.
+    max_players (int): The maximum number of players allowed in the game.
+    system _id (int): The game system id.
+    description (str): A brief description of the game.
+    Returns:
+    None
+    """
+
     cur.execute("INSERT INTO games_posts (title, system_id, players, description, gm) "
                 "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
                     
 def get_games(cur):
+    """
+    Fetches all records from the 'games_posts' table.
+    Args:
+        cur: The database cursor to execute the query.
+    Returns:
+        list: A list of tuples containing all records from the 'games_posts' table.
+    """
+
     cur.execute("SELECT * FROM games_posts")
     return cur.fetchall()
 
 def update_last_login(cur, user_id):
+    """
+    Updates the last login timestamp for a user in the database.
+    Args:
+        cur: The database cursor to execute the query.
+        user_id: The ID of the user whose last login timestamp is to be updated.
+    Returns:
+        None
+    """
+
     cur.execute("UPDATE users SET last_login = %s WHERE id = %s", 
                 (datetime.now(), user_id))
 
 def get_systems(cur):
-    cur.execute("SELECT * FROM users")
+    """
+    Retrieve all records from the 'systems' table.
+    Args:
+        cur: The database cursor to execute the query.
+    Returns:
+        list: A list of tuples containing all records from the 'systems' table.
+    """
+    cur.execute("SELECT * FROM systems")
     return cur.fetchall()

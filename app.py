@@ -57,17 +57,22 @@ def index():
 def register():
     """
     Handle user registration.
-
+    GET:
+        Renders the registration form.
+    POST:
+        Processes the registration form:
+        - Validates the presence of username, email, password, and password confirmation.
+        - Checks if the password and confirmation match.
+        - Hashes the password.
+        - Checks if the username already exists in the database.
+        - Adds the new user to the database.
+        - Commits the transaction.
+        - Redirects to the login page upon successful registration.
     Returns:
-        - On GET: Renders the registration form.
-        - On POST: 
-            - If any form field is missing or invalid, re-renders the registration form with an error message.
-            - If the username already exists, re-renders the registration form with an error message.
-            - If registration is successful, redirects to the login page.
-
-    Raises:
-        Exception: If there is an error adding the user to the database.
+        - Renders the registration form with error messages if validation fails or an exception occurs.
+        - Redirects to the login page upon successful registration.
     """
+
     if request.method == 'GET':
         return render_template("register.html")
     if request.method == 'POST':
@@ -108,22 +113,14 @@ def register():
 def login():
     """
     Handle user login.
-
-    This function clears the current session and processes login requests.
-
-    GET:
-        Renders the login page.
-
-    POST:
-        - Retrieves the username/email and password from the form.
-        - Validates the presence of username/email and password.
-        - Determines whether the user input is an email or username.
-        - Checks the user's credentials against the database.
-        - If credentials are invalid, flashes an error message and re-renders the login page.
-        - If credentials are valid, sets the user ID in the session and flashes a success message.
-        - Redirects to the home page if user preferences are filled, otherwise renders the preferences page.
-
-    """
+    This function clears the current session and processes the login request.
+    If the request method is GET, it renders the login page.
+    If the request method is POST, it validates the user credentials and logs the user in.
+    Returns:
+        The rendered template for the login page or preferences page, or a redirect to the home page.
+    Raises:
+        Exception: If there is an error during the login process.
+    """ 
     session.clear()
     if request.method == 'GET':
         return render_template("login.html")
@@ -181,14 +178,22 @@ def logout():
 def preferences():
     """
     Handle user preferences for roles.
+    This function handles both GET and POST requests for user preferences.
+    - For GET requests, it renders the preferences form.
+    - For POST requests, it processes the submitted preferences form.
+    POST request processing:
+    1. Retrieves the user ID from the session.
+    2. Checks if the user ID is valid; if not, redirects to the home page with an error message.
+    3. Retrieves the list of selected roles from the form.
+    4. Checks if any preferences were selected; if not, re-renders the preferences form with an error message.
+    5. Updates the user's preferences in the database based on the selected roles.
+    6. Commits the changes to the database and flashes a success message.
+    7. Handles any exceptions by flashing an error message and redirecting to the home page.
     Returns:
-        - On GET: Renders the preferences.html template.
-        - On POST: Redirects to the home page with a success or error message.
-    Raises:
-        - Redirects to the home page with an error message if the user is not found in the session.
-        - Renders the preferences.html template with an error message if no preferences are selected.
-        - Redirects to the home page with an error message if there is an exception during database operations.
+        - For GET requests: Renders the preferences form.
+        - For POST requests: Redirects to the home page after processing the form.
     """
+
     if request.method == 'GET':
         return render_template("preferences.html")
     if request.method == 'POST':
@@ -221,14 +226,15 @@ def preferences():
 @login_required
 def profile():
     """
-    Route for displaying the user's profile.
-    This route is protected by the @login_required decorator, ensuring that only logged-in users can access it.
+    Renders the profile page for the logged-in user.
+    This function retrieves the user's profile information from the database
+    and checks their player and game master (GM) status. If the user is not
+    found or an error occurs during the retrieval process, appropriate error
+    messages are flashed, and the user is redirected to the home page.
     Returns:
-        A rendered template of the user's profile if the user is found in the session and the database.
-        Redirects to the home page with an error message if the user is not found or if there is an error fetching the user data.
-    Raises:
-        Exception: If there is an error while fetching the user data from the database.
+        Response: Renders the profile page with the user's profile information or redirects to the home page with an error message.
     """
+
     user = session.get("user")["id"]
     if check_and_flash_if_none(user, "Brak użytkownika"):
         return redirect("/", error="Brak użytkownika")
@@ -254,7 +260,24 @@ def profile():
 
 @app.route('/post_game', methods=['GET', 'POST'])
 @login_required
+
 def post_game():
+    """
+    Handle the posting of a new game.
+    This function handles both GET and POST requests for posting a new game.
+    - For GET requests, it retrieves the available game systems and renders the "post_game.html" template.
+    - For POST requests, it processes the form data to add a new game to the database.
+    Returns:
+        - For GET requests:
+            - Redirects to the home page with an error message if the user is not logged in.
+            - Renders the "post_game.html" template with the available game systems.
+        - For POST requests:
+            - Redirects to the home page with an error message if the user is not logged in.
+            - Renders the "post_game.html" template with an error message if any required form field is missing.
+            - Adds the new game to the database and redirects to the home page with a success message.
+            - Redirects to the home page with an error message if there is an exception during the database operation.
+
+    """
     if request.method == 'GET':
         print("GET")
         if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
