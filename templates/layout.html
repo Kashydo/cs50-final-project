@@ -28,17 +28,22 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
-          {% if session["user"] %}
+          {% if session["user_id"] %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
               <a class="nav-link" href="/profile">Profile</a>
             </li>
+            {% if session["gm"] %}
             <li class="nav-item">
               <a class="nav-link" href="/post_game">Post Game</a>
+            </ul>li>
+
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="/logout">Log out</a>
+              {% endif %}
+              <a class="nav-link active" aria-current="page" href="/logout"
+                >Log out</a
+              >
             </li>
-            
           </ul>
           {% else %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -67,26 +72,39 @@
       </div>
     </nav>
     <div class="container-fluid text-center">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <ul class="flashes list-unstyled">
-      {% for category, message in messages %}
-        {% if category == "error" %}
-          <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flashes list-unstyled">
+        {% for category, message in messages %} {% if category == "error" %}
+        <div
+          class="alert alert-warning alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
         {% elif category == "success" %}
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endif %}
-      {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-  </div>
+        <div
+          class="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+        {% endif %} {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+    </div>
     <main class="container py-5 text-center">
       {% block content %}{% endblock %}
     </main>

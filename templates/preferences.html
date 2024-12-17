@@ -1,20 +1,35 @@
-{% extends "layout.html" %}
-{% block title %}
-    Preferences
-{% endblock %}
-{% block content %}
-    <form action="preferences" method="post">
-        <div class="mb-3">
-            <label for = "checboxPlayerOrGm" class="form-label">Jesteś graczem czy mistrzem gry (można zaznaczyc więcej niż jedną)</label>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name ="roles" id="checkboxPlayer" value="player">
-                <label class="form-check-label" for="checkboxPlayer">Graczem</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="roles" id="checkboxGM" value="gm">
-                <label class="form-check-label" for="checkboxGM">Mistrzem Gry</label>
-              </div>
-        </div>
-        <button class="btn btn-primary" type="submit">Log in</button>
-    </form>
+{% extends "layout.html" %} {% block title %} Preferences {% endblock %} {%
+block content %}
+<form action="preferences" method="post">
+  <div class="mb-3">
+    <label for="checboxPlayerOrGm" class="form-label"
+      >Jesteś graczem czy mistrzem gry (można zaznaczyc więcej niż
+      jedną)</label
+    >
+    <div class="form-check form-check-inline">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        name="roles"
+        id="checkboxPlayer"
+        value="player"
+      />
+      <label class="form-check-label" for="checkboxPlayer">Graczem</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        name="roles"
+        id="checkboxGM"
+        value="gm"
+      />
+      <label class="form-check-label" for="checkboxGM">Mistrzem Gry</label>
+    </div>
+  </div>
+  <button class="btn btn-primary" type="submit">Log in</button>
+</form>
+<div class="mb-3">
+  <a class="btn btn-warning" href="/" role="button">Uzupełnij później</a>
+</div>
 {% endblock %}
