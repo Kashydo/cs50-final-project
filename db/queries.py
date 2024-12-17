@@ -85,7 +85,7 @@ def add_gm(cur, user):
         (user,),
     )
 
-def update_prefences_questionary(cur, user):
+def update_preferences_questionary(cur, user):
     """
     Updates the user's preferences questionnaire status to filled in the database.
     Args:
@@ -157,3 +157,7 @@ def get_games(cur):
 def update_last_login(cur, user_id):
     cur.execute("UPDATE users SET last_login = %s WHERE id = %s", 
                 (datetime.now(), user_id))
+
+def get_systems(cur):
+    cur.execute("SELECT * FROM users")
+    return cur.fetchall()

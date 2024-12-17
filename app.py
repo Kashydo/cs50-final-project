@@ -148,10 +148,13 @@ def login():
                     player = True
                 if queries.get_user_gm_status(cur, user['id']):
                     gm = True
-                session["user_id"] = user['id']
-                session["name"] = user['name']
-                session["gm"] = gm
-                session["player"] = player
+                session["user"] = {
+                    "id": user["id"],
+                    "name": user["name"],
+                    "gm": gm,
+                    "player": player
+                }
+
                 queries.update_last_login(cur, user['id'])
                 conn.commit
                 flash("Zalogowano", "success")
@@ -202,12 +205,9 @@ def preferences():
                 if 'player' in preferences:
                     print("player")
                     queries.add_player(cur, user)
-                    filled_preferences = True
                 if 'gm' in preferences:
                     print("gm")
-                    queries.add_gm(cur, user)
-                    filled_preferences = True
-                queries.update_prefences_questionary(cur, user)
+                queries.update_preferences_questionary(cur, user)
                 print("filled_preferences")
                 conn.commit()
                 flash("Wypełniono ankiete", "success")
@@ -228,7 +228,7 @@ def profile():
     Raises:
         Exception: If there is an error while fetching the user data from the database.
     """
-    user = session.get("user")
+    user = session.get("user")["id"]
     if check_and_flash_if_none(user, "Brak użytkownika"):
         return redirect("/", error="Brak użytkownika")
     try:
@@ -250,6 +250,7 @@ def profile():
         return redirect("/", error="Błąd pobierania użytkownika")
     return render_template("profile.html")
     
+
 @app.route('/post_game', methods=['GET', 'POST'])
 @login_required
 def post_game():
@@ -257,7 +258,8 @@ def post_game():
         print("GET")
         if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
             return redirect("/", error="Brak użytkownika")
-        return render_template("post_game.html")
+        systems = queries.get_games(cur)
+        return render_template("post_game.html", systems=systems)
     if request.method == 'POST':
         print("POST")
         if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
@@ -276,7 +278,7 @@ def post_game():
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 print("try to add game")
-                queries.add_game(cur, session.get("user"), title, players, system, description)
+                queries.add_game(cur, session.get("user")["id"], title, players, system, description)
                 conn.commit()
                 flash("Dodano grę", "success")
             except Exception as e:
