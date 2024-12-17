@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from flask import Flask, render_template, request, flash
 from flask_bcrypt import generate_password_hash, check_password_hash
+from datetime import datetime
 
 
 
@@ -49,9 +50,10 @@ def add_user(cur, username, email, hash):
     Returns:
         None
     """
+    timestamp = datetime.now()
     cur.execute(
-        "INSERT INTO users (name, email, hash, filled_preferences) VALUES (%s, %s, %s, False)",
-        (username, email, hash))
+        "INSERT INTO users (name, email, hash, filled_preferences, registered_at, last_login) VALUES (%s, %s, %s, False, %s , %s)",
+        (username, email, hash, timestamp, timestamp))
 
 def add_player(cur, user):
     """
@@ -149,5 +151,9 @@ def add_game(cur, user, title, max_players, game_system, description):
                 "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
                     
 def get_games(cur):
-    cur.execute("SELECT * FROM games_posts JOIN users ON gm = users.id")
+    cur.execute("SELECT * FROM games_posts")
     return cur.fetchall()
+
+def update_last_login(cur, user_id):
+    cur.execute("UPDATE users SET last_login = %s WHERE id = %s", 
+                (datetime.now(), user_id))

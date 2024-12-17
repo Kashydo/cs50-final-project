@@ -7,6 +7,7 @@ from os import environ
 from flask_bcrypt import generate_password_hash 
 from helpers import login_required, check_and_flash_if_none
 import db.queries as queries
+from datetime import datetime
 
 # Wybór konfiguracji
 env = environ.get('FLASK_ENV', 'development')
@@ -141,7 +142,18 @@ def login():
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 user = queries.check_user_password(cur, column, user, password)
                 check_and_flash_if_none(user, "Niepoprawne dane")
-                session["user"] = user['id']
+                player = False
+                gm = False
+                if queries.get_user_profile(cur, user["id"]):
+                    player = True
+                if queries.get_user_gm_status(cur, user['id']):
+                    gm = True
+                session["user_id"] = user['id']
+                session["name"] = user['name']
+                session["gm"] = gm
+                session["player"] = player
+                queries.update_last_login(cur, user['id'])
+                conn.commit
                 flash("Zalogowano", "success")
         except Exception as e:
             flash("Błąd logowania", "error")
