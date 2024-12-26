@@ -20,9 +20,9 @@ content %}
       name="system"
       required
     >
-      {% for system in systems %}
       <option selected>Wybierz system TTRPG</option>
-      <option value="{{system.id}}">{{system.title}}</option>
+      {% for system in systems %}
+      <option value="{{system.id}}">{{system["title"]}}</option>
       {% endfor%}
     </select>
   </div>

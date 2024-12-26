@@ -296,7 +296,16 @@ def post_game():
         print("GET")
         if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
             return redirect("/", error="Brak użytkownika")
-        systems = queries.get_games(cur)
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                systems = queries.get_systems(cur)
+                print("get game systems")
+                for system in systems:
+                    print(system["title"])
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+                flash("Błąd pobierania systemów gier", "error")
+                return redirect("/", error="Błąd pobierania systemów gier")
         return render_template("post_game.html", systems=systems)
     if request.method == 'POST':
         print("POST")
@@ -316,6 +325,7 @@ def post_game():
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 print("try to add game")
+                print(f"{title}, {session.get("user")["id"]}, {players}, {system}, {description}")
                 queries.add_game(cur, session.get("user")["id"], title, players, system, description)
                 conn.commit()
                 flash("Dodano grę", "success")

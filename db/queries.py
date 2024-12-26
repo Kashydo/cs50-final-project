@@ -161,7 +161,7 @@ def add_game(cur, user, title, max_players, game_system, description):
     None
     """
 
-    cur.execute("INSERT INTO games_posts (title, system_id, players, description, gm) "
+    cur.execute("INSERT INTO games_posts (title, system_id, max_players, description, gm_id) "
                 "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
                     
 def get_games(cur):
