@@ -1,10 +1,12 @@
-from flask import Flask, flash, redirect, render_template, request, session
+import os
+import base64
+from flask import Flask, flash, redirect, render_template, request, session, g
 from flask_session import Session
 from config import ProdConfig, DevConfig
 from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from os import environ
-from flask_bcrypt import generate_password_hash 
+from flask_bcrypt import generate_password_hash, check_password_hash
 from helpers import login_required, check_and_flash_if_none
 import db.queries as queries
 from datetime import datetime
@@ -38,12 +40,24 @@ except Exception as e:
     print(f"Błąd połączenia z bazą danych: {e}")
     raise
 
+@app.before_request
+def before_request():
+    g.nonce = base64.b64encode(os.urandom(16)).decode('utf-8')
+
 @app.after_request
 def after_request(response):
     """Ensure responses aren't cached"""
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Expires"] = 0
     response.headers["Pragma"] = "no-cache"
+    response.headers["Content-Security-Policy"] = (
+        f"default-src 'self'; "
+        f"script-src 'self' https://cdn.jsdelivr.net 'nonce-{g.nonce}'; "
+        f"style-src 'self' https://cdn.jsdelivr.net; "
+        f"style-src-elem 'self' https://cdn.jsdelivr.net; "
+        f"img-src 'self' data:; "
+        f"font-src 'self' https://cdn.jsdelivr.net; "
+    )
     return response
 
 # Testowa trasa
@@ -51,7 +65,8 @@ def after_request(response):
 def index():
     with conn.cursor(cursor_factory=DictCursor) as cur:
         games = queries.get_games(cur)
-    return render_template("index.html", games=games)
+    return render_template("index.html", games=games, nonce=g.nonce)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -148,8 +163,7 @@ def login():
                 session["user"] = {
                     "id": user["id"],
                     "name": user["name"],
-                    "gm": gm,
-                    "player": player
+                    "gm": gm
                 }
 
                 queries.update_last_login(cur, user['id'])

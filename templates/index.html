@@ -5,7 +5,15 @@
     <h5 class="card-title">{{game.title}}</h5>
     <p class="card-players">Max. players{{game.players}}</p>
     <p class="card-text">{{game.description}}</p>
-    <a href="#" class="btn btn-primary">Go somewhere</a>
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-bs-toggle="modal"
+      href="game_page.html"
+      data-bs-target="#gameModal"
+    >
+      Szczegóły
+    </button>
   </div>
 </div>
 {%endfor%} {% endblock %}
