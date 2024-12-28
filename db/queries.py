@@ -199,3 +199,12 @@ def get_systems(cur):
     """
     cur.execute("SELECT * FROM systems")
     return cur.fetchall()
+
+def get_game_by_id(cur, id):
+    cur.execute("SELECT * FROM games_posts WHERE id = %s", (id,))
+    game= cur.fetchone()
+    if game:
+        columns = [desc[0] for desc in cur.description]
+        game_dict = dict(zip(columns, game))
+        return game_dict
+    return None

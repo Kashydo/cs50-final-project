@@ -1,6 +1,6 @@
 import os
 import base64
-from flask import Flask, flash, redirect, render_template, request, session, g
+from flask import Flask, flash, redirect, render_template, request, session, g, jsonify, abort
 from flask_session import Session
 from config import ProdConfig, DevConfig
 from psycopg2 import connect
@@ -65,7 +65,7 @@ def after_request(response):
 def index():
     with conn.cursor(cursor_factory=DictCursor) as cur:
         games = queries.get_games(cur)
-    return render_template("index.html", games=games, nonce=g.nonce)
+    return render_template("index.html", games=games, nonce=g.nonce, game_data=None)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -333,6 +333,23 @@ def post_game():
                 flash("Błąd dodawania gry", "error")
                 return redirect("/", error="Błąd dodawania gry")
         return redirect("/")
+    
+
+@app.route('/game_data/<int:game_id>', methods=['GET'])
+def game_data(game_id):
+    if request.method == 'GET':
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                game_data = queries.get_game_by_id(cur, game_id)
+                if check_and_flash_if_none(game_data, "Nie znaleziono gry"):
+                    abort(404)
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+                flash("Błąd pobierania danych gry", "error")
+                return redirect("/", error="Błąd pobierania danych gry")
+        
+        return jsonify(game_data)
+
 
 
 if __name__ == '__main__':
