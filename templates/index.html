@@ -1,20 +1,28 @@
-{% extends "layout.html" %} {% block content %} {%for game in games%}
-<div class="gmae" style="width: 18rem">
-  <img src="..." class="card-img-top" alt="..." />
-  <div class="card-body">
-    <h5 class="card-title">{{game.title}}</h5>
-    <p class="card-players">Max. players{{game.players}}</p>
-    <p class="card-text">{{game.description}}</p>
-    <button
-      type="button"
-      class="btn btn-primary"
-      data-bs-toggle="modal"
-      data-bs-target="#gameModal"
-    >
-      Launch demo modal
-    </button>
-    {%endfor%}
-
+{% extends "layout.html" %} {% block content %} 
+<div class="row"> 
+  {%for game in games%}
+  <div class="col-sm-6 mb-3 mb-sm-0">
+    <div class="game" style="width: 18rem">
+      <div class="card border-info mb-3" style="max-width: 18rem;">
+        <div class="card-header">{{game.title}}</div>
+        <div class="card-body">
+          <p class="card-players">Max. players{{game.players}}</p>
+          <p class="card-text">{{game.description}}</p>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#gameModal"
+          >
+            Szczegóły
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {%endfor%}
+</div>
+    
     <!-- Modal -->
     <div
       class="modal fade"
