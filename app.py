@@ -255,17 +255,22 @@ def profile():
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
             user_profile = queries.get_user_profile(cur, user)
-            check_and_flash_if_none(user_profile, "Brak użytkownika")
+            if check_and_flash_if_none(user_profile, "Brak użytkownika"):
+                return redirect("/", error="Brak użytkownika")
             user_profile = dict(user_profile)
+            player_games = None
+            gm_games = None
             if queries.get_user_player_status(cur, user):
                user_profile["player"] = True
+               player_games = queries.fetch_all_players_games(cur, user)
             else:
                 user_profile["player"] = False    
             if queries.get_user_gm_status(cur, user):
                 user_profile["gm"] = True
+                gm_games = queries.fetch_all_gm_games(cur, user)
             else:
                 user_profile["gm"] = False
-            return render_template("profile.html", user= user_profile)
+            return render_template("profile.html", user= user_profile, player_games=player_games, gm_games=gm_games)
     except Exception as e:
         flash("Błąd pobierania użytkownika", "error")
         return redirect("/", error="Błąd pobierania użytkownika")
@@ -370,8 +375,8 @@ def apply_for_game(game_id):
         if check_and_flash_if_none(user_id, "Brak użytkownika"):
             return redirect("/", error="Brak użytkownika")
         message = request.form.get("message")
-        if message is None:
-            message = f"{session.get("user")["name"]} chce dołączyć do gry"
+        if not message:
+            message = f'{session.get("user")["name"]} chce dołączyć do gry'
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 chatroom = queries.fetch_chat(cur, game_id)
@@ -398,6 +403,23 @@ def apply_for_game(game_id):
                 print(f"Exception occurred: {e}")
                 flash("Błąd wysyłania wiadomości", "error")
                 return redirect("/", error="Błąd wysyłania wiadomości")
+            
+@app.route('/game_chat/<int:game_id>', methods=['GET'])
+@login_required
+def game_chat(game_id):
+    if request.method == 'GET':
+        user = session.get("user")["id"]
+        if check_and_flash_if_none(user, "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                messages = queries.fetch_all_messages(cur, game_id)
+                return render_template("game_chat.html", messages=messages)
+            except Exception as e:
+                flash("Couldn't fetch messages", "error")
+                redirect("/", error="Couldn't fetch messages")
+
+
 
 
       

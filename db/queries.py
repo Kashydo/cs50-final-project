@@ -250,4 +250,24 @@ def check_if_user_in_chat(cur, user_id, chatroom_id):
 def add_user_to_chat(cur, user_id, chatroom_id):
     cur.execute("INSERT INTO users_in_chat (chatroom_id, user_id) VALUES (%s, %s)", (chatroom_id, user_id,))
 
+def fetch_all_gm_games(cur, user_id):
+    cur.execute("SELECT * FROM games_posts WHERE gm_id=%s", (user_id,))
+    gm_games = cur.fetchall()
+    return gm_games
+
+def fetch_all_players_games(cur, user_id):
+    cur.execute("""
+        SELECT * FROM games_posts 
+        FULL JOIN chat_rooms ON games_posts.id=chat_rooms.game_id 
+        FULL JOIN users_in_chat ON chat_rooms.id=users_in_chat.chatroom_id 
+        WHERE users_in_chat.user_id=%s AND games_posts.gm_id != %s
+    """, (user_id, user_id))
+    player_games = cur.fetchall()
+    return player_games
+
+def fetch_all_messages(cur, game_id):
+    cur.execute("""
+    SELECT * FROM chat_messages FULL JOIN chat_rooms ON chat_messages.chatroom_id = chat_rooms.id WHERE chat_rooms.game_id = %s ORDER BY chat_messages.timestamp DESC""", (game_id,))
+    return cur.fetchall()
+
 

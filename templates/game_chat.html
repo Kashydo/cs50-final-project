@@ -1,0 +1,9 @@
+{% extends "layout.html" %} {% block content %} {% for m in messages %}
+<div class="card border-primary mb-3" style="max-width: 18rem">
+  <div class="card-header">{{m.user_id}}</div>
+  <div class="card-body text-primary">
+    <p class="card-text">{{m.message}}</p>
+  </div>
+  <div class="card-footer">{{m.timestamp}}</div>
+</div>
+{% endfor %} {% endblock %}
