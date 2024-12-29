@@ -6,7 +6,9 @@
       <div class="card border-info mb-3" style="max-width: 18rem">
         <div class="card-header">{{game.title}}</div>
         <div class="card-body">
-          <p class="card-players">Max. players {{game.players}}</p>
+          <p class="card-players">
+            Players: {{game.accepted_players}} / {{game.max_players}}
+          </p>
           <p class="card-text">{{game.description}}</p>
           <button
             type="button"
@@ -49,13 +51,15 @@
       </div>
       <div class="modal-body">{{game_data.description}}</div>
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-bs-dismiss="modal"
-        >
-          Apply
-        </button>
+        <form action="/apply_for_game/" method="get">
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Apply
+          </button>
+        </form>
       </div>
     </div>
   </div>

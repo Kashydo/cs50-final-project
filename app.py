@@ -324,8 +324,6 @@ def post_game():
 
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
-                print("try to add game")
-                print(f"{title}, {session.get("user")["id"]}, {players}, {system}, {description}")
                 queries.add_game(cur, session.get("user")["id"], title, players, system, description)
                 conn.commit()
                 flash("Dodano grę", "success")
@@ -347,9 +345,65 @@ def game_data(game_id):
                 print(f"Exception occurred: {e}")
                 flash("Błąd pobierania danych gry", "error")
                 return redirect("/", error="Błąd pobierania danych gry")
-        
         return jsonify(game_data)
 
+
+@app.route('/apply_for_game/<int:game_id>', methods=['GET', 'POST'])
+@login_required
+def apply_for_game(game_id):
+    if request.method == 'GET':
+        user = session.get("user")["id"]
+        if check_and_flash_if_none(user, "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                game = queries.get_game_title_and_gm(cur, game_id)
+                if check_and_flash_if_none(game, "Nie znaleziono gry"):
+                    return redirect("/", error="Nie znaleziono gry")
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+                flash("Błąd pobierania danych gry", "error")
+                return redirect("/", error="Błąd pobierania danych gry")
+        return render_template("apply_for_game.html", game=game, game_id=game_id)
+    if request.method == 'POST':
+        user_id = session.get("user")["id"]
+        if check_and_flash_if_none(user_id, "Brak użytkownika"):
+            return redirect("/", error="Brak użytkownika")
+        message = request.form.get("message")
+        if message is None:
+            message = f"{session.get("user")["name"]} chce dołączyć do gry"
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            try:
+                chatroom = queries.fetch_chat(cur, game_id)
+                if chatroom is None:
+                    queries.create_chatroom(cur, game_id)
+                    conn.commit()
+                    chatroom = queries.fetch_chat(cur, game_id)
+                    queries.apply_message(cur, chatroom["id"], user_id)
+                    queries.send_message(cur, chatroom["id"], user_id, message)
+                    conn.commit()
+                    flash("Wysłano wiadomość", "success")
+                    return redirect("/")
+                user_waiting = queries.check_if_user_wait_for_accept(cur, user_id, chatroom["id"])
+                user_accepted = queries.check_if_user_in_chat(cur, user_id, chatroom["id"])
+                if user_waiting is None and user_accepted is None:
+                    queries.apply_message(cur, chatroom["id"], user_id)
+                    queries.send_message(cur, chatroom["id"], user_id, message)
+                    conn.commit()
+                    flash("Wysłano wiadomość", "success")
+                    return redirect("/")
+                flash("Allredy applied to this game", "error")
+                return redirect("/")
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+                flash("Błąd wysyłania wiadomości", "error")
+                return redirect("/", error="Błąd wysyłania wiadomości")
+
+
+      
+
+            
+        
 
 
 if __name__ == '__main__':

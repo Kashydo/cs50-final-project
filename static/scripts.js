@@ -37,6 +37,8 @@ function callGameData(id) {
       console.log(data);
       document.getElementById("gameModalLabel").innerText = data.title;
       document.querySelector(".modal-body").innerText = data.description;
+      const form = document.querySelector(".modal-footer form");
+      form.action = `/apply_for_game/${data.id}`;
     })
     .catch((error) => {
       console.error("Error:", error);

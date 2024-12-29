@@ -161,8 +161,8 @@ def add_game(cur, user, title, max_players, game_system, description):
     None
     """
 
-    cur.execute("INSERT INTO games_posts (title, system_id, max_players, description, gm_id) "
-                "VALUES (%s, %s, %s, %s, %s)", (title, game_system, max_players, description, user))
+    cur.execute("INSERT INTO games_posts (title, system_id, max_players, description, gm_id, accepted_players) "
+                "VALUES (%s, %s, %s, %s, %s, %s)", (title, game_system, max_players, description, user, 0))
                     
 def get_games(cur):
     """
@@ -208,3 +208,46 @@ def get_game_by_id(cur, id):
         game_dict = dict(zip(columns, game))
         return game_dict
     return None
+
+def get_game_title_and_gm(cur, id):
+    cur.execute("SELECT title, gm_id FROM games_posts WHERE id = %s", (id,))
+    game = cur.fetchone()
+    if game:
+        return game
+    return None
+
+def create_chatroom(cur, game_id):
+    cur.execute("INSERT INTO chat_rooms (game_id) VALUES (%s)", (game_id,))
+    
+def fetch_chat(cur, game_id):
+    cur.execute("SELECT * FROM chat_rooms WHERE game_id = %s", (game_id,))
+    chat = cur.fetchone()
+    if chat:
+        return chat
+    return None
+
+def apply_message(cur, chatroom_id, user_id):
+    cur.execute("INSERT INTO waiting_for_accept (chatroom_id, user_id) VALUES (%s, %s)", (chatroom_id, user_id,))
+
+def send_message(cur, chatroom_id, user_id, message):
+    timestamp = datetime.now()
+    cur.execute("INSERT INTO chat_messages (chatroom_id, user_id, message, timestamp) VALUES (%s, %s, %s, %s)", (chatroom_id, user_id, message, timestamp))
+
+def check_if_user_wait_for_accept(cur, user_id, chatroom_id):
+    cur.execute("SELECT * FROM waiting_for_accept WHERE user_id=%s AND chatroom_id=%s", (user_id, chatroom_id))
+    user = cur.fetchone()
+    if user is None:
+        return None
+    return user
+
+def check_if_user_in_chat(cur, user_id, chatroom_id):
+    cur.execute("SELECT * FROM users_in_chat WHERE user_id=%s AND chatroom_id=%s", (user_id,chatroom_id))
+    user = cur.fetchone()
+    if user is None:
+        return None
+    return user
+
+def add_user_to_chat(cur, user_id, chatroom_id):
+    cur.execute("INSERT INTO users_in_chat (chatroom_id, user_id) VALUES (%s, %s)", (chatroom_id, user_id,))
+
+

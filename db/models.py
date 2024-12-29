@@ -41,8 +41,42 @@ def create_tables(conn):
                 system_id INTEGER REFERENCES systems(id),
                 max_players INTEGER NOT NULL,
                 description TEXT,
-                gm_id INTEGER REFERENCES users(id)      
+                gm_id INTEGER REFERENCES users(id),  
+                accepted_players INTEGER    
             );
+        """)
+
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS chat_rooms (
+                    id SERIAL PRIMARY KEY,
+                    game_id INTEGER REFERENCES games_posts(id)
+                    );
+        """)
+
+        cur.execute("""
+         CREATE TABLE IF NOT EXISTS chat_messages (
+                    id SERIAL PRIMARY KEY,
+                    chatroom_id INTEGER REFERENCES chat_rooms(id),
+                    user_id INTEGER REFERENCES users(id),
+                    message VARCHAR(2000) NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+        """)
+
+        cur.execute("""
+         CREATE TABLE IF NOT EXISTS users_in_chat(
+                id SERIAL PRIMARY KEY,
+                chatroom_id INTEGER REFERENCES chat_rooms(id),
+                user_id INTEGER REFERENCES users(id)
+         );
+        """)
+
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS waiting_for_accept(
+                id SERIAL PRIMARY KEY,
+                chatroom_id INTEGER REFERENCES chat_rooms(id),
+                user_id INTEGER REFERENCES users(id)
+         );
         """)
 
 
