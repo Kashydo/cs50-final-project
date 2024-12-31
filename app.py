@@ -301,6 +301,9 @@ def post_game():
         print("GET")
         if check_and_flash_if_none(session.get("user"), "Brak użytkownika"):
             return redirect("/", error="Brak użytkownika")
+        if not session.get("user")["gm"]:
+            flash("Musisz być GM żeby dodać grę", "errore")
+            return redirect("/", error="Użytkownik nie jest GM")
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 systems = queries.get_systems(cur)
@@ -365,8 +368,10 @@ def apply_for_game(game_id):
                 game = queries.get_game_title_and_gm(cur, game_id)
                 if check_and_flash_if_none(game, "Nie znaleziono gry"):
                     return redirect("/", error="Nie znaleziono gry")
+                if game["gm_id"] == user:
+                    flash("GM nie może aplikowac do swojej gry", "error")
+                    return redirect("/")
             except Exception as e:
-                print(f"Exception occurred: {e}")
                 flash("Błąd pobierania danych gry", "error")
                 return redirect("/", error="Błąd pobierania danych gry")
         return render_template("apply_for_game.html", game=game, game_id=game_id)
@@ -388,6 +393,10 @@ def apply_for_game(game_id):
                     queries.send_message(cur, chatroom["id"], user_id, message)
                     conn.commit()
                     flash("Wysłano wiadomość", "success")
+                    return redirect("/")
+                game = queries.get_game_title_and_gm(cur, game_id)
+                if game["gm_id"] == user_id:
+                    flash("Jesteś już GM tej gry", "error")
                     return redirect("/")
                 user_waiting = queries.check_if_user_wait_for_accept(cur, user_id, chatroom["id"])
                 user_accepted = queries.check_if_user_in_chat(cur, user_id, chatroom["id"])
@@ -418,8 +427,6 @@ def game_chat(game_id):
             except Exception as e:
                 flash("Couldn't fetch messages", "error")
                 redirect("/", error="Couldn't fetch messages")
-
-
 
 
       
