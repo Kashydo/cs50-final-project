@@ -1,11 +1,67 @@
-{% extends "layout.html" %} {% block content %} {%for game in games%}
-<div class="gmae" style="width: 18rem">
-  <img src="..." class="card-img-top" alt="..." />
-  <div class="card-body">
-    <h5 class="card-title">{{game.title}}</h5>
-    <p class="card-players">Max. players{{game.players}}</p>
-    <p class="card-text">{{game.description}}</p>
-    <a href="#" class="btn btn-primary">Go somewhere</a>
+{% extends "layout.html" %} {% block content %}
+<div class="row">
+  {% for game in games %}
+  <div class="col-sm-6 mb-3 mb-sm-0">
+    <div class="game" style="width: 18rem">
+      <div class="card border-info mb-3" style="max-width: 18rem">
+        <div class="card-header">{{game.title}}</div>
+        <div class="card-body">
+          <p class="card-players">
+            Players: {{game.accepted_players}} / {{game.max_players}}
+          </p>
+          <p class="card-text">{{game.description}}</p>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#gameModal"
+            data-game-id="{{game.id}}"
+          >
+            Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="gameModal"
+  tabindex="-1"
+  aria-labelledby="gameModalLabel"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="gameModalLabel">
+          {{game_data.title}}
+        </h1>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">{{game_data.description}}</div>
+      <div class="modal-footer">
+        <form action="/apply_for_game/" method="get">
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Apply
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
-{%endfor%} {% endblock %}
+{% endblock %}

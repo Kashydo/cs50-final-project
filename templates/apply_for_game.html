@@ -1,0 +1,17 @@
+{% extends "layout.html" %} {% block title %} Zapisz się do {{game.title}}{%
+endblock %} {% block content %}
+<form action="/apply_for_game/{{game_id}}" method="post">
+  <div class="form-group">
+    <label for="message">Message</label>
+    <textarea
+      class="form-control"
+      id="message"
+      name="message"
+      rows="3"
+      maxlength="2000"
+      placeholder="Write message to gm"
+    ></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

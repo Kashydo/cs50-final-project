@@ -1,17 +1,18 @@
-{% extends "layout.html" %}
-
-{% block title %}
-    Profile
-{% endblock %}
-
-{% block content %}
-    <h1>Profil</h1>
-    <p>Witaj, {{user.name}}!</p>
-    <h2>Twoje preferencje</h2>
-    {% if user.player %}
-        <p>Gracz</p>
-    {% endif %}
-    {% if user.gm %}
-        <p>Mistrz Gry</p>
-    {% endif %}
-{% endblock %}
+{% extends "layout.html" %} {% block title %} Profile {% endblock %} {% block
+content %}
+<h1>Profile</h1>
+<p>Welcome, {{ user.name }}!</p>
+<h2>Your preferences</h2>
+{% if user.player %}
+<p>Games I play</p>
+{% if player_games|length == 0 %}
+<p>You don't have any games</p>
+{% else %} {% for game in player_games %}
+<a class="link-primary" href="/game_chat/{{game.id}}">{{ game.title }}</a>
+{% endfor %} {% endif %} {% endif %} {% if user.gm %}
+<p>Games I GM</p>
+{% if gm_games|length == 0 %}
+<p>You don't have any games</p>
+{% else %} {% for game in gm_games %}
+<a class="link-primary" href="/game_chat/{{game.id}}">{{ game.title }}</a>
+{% endfor %} {% endif %} {% endif %} {% endblock %}
