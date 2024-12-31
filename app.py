@@ -227,6 +227,7 @@ def preferences():
                 if 'gm' in preferences:
                     print("gm")
                     queries.add_gm(cur, user)
+                    session["user"]["gm"] = True
                 queries.update_preferences_questionary(cur, user)
                 print("filled_preferences")
                 conn.commit()
@@ -303,7 +304,7 @@ def post_game():
             return redirect("/", error="Brak użytkownika")
         if not session.get("user")["gm"]:
             flash("Musisz być GM żeby dodać grę", "errore")
-            return redirect("/", error="Użytkownik nie jest GM")
+            return redirect("/")
         with conn.cursor(cursor_factory=DictCursor) as cur:
             try:
                 systems = queries.get_systems(cur)
